@@ -1,6 +1,90 @@
 #include "binary_trees.h"
 
 /**
+ * binary_tree_height - Measures the height of a binary tree.
+ *
+ * @tree: Pointer to the root node of the tree to measure the height.
+ *
+ * Return: The height of the binary tree. If the tree is empty, return 0.
+ */
+size_t binary_tree_height(const binary_tree_t *tree)
+{
+	size_t l = 0;
+	size_t r = 0;
+
+	if (tree == NULL)
+		return (0);
+
+	if (tree->left)
+		l = 1 + binary_tree_height(tree->left);
+	if (tree->right)
+		r = 1 + binary_tree_height(tree->right);
+
+	return ((l > r) ? l : r);
+}
+
+/**
+ * binary_tree_depth - Measures the depth of a node in a binary tree.
+ *
+ * @tree: Pointer to the node to measure the depth of.
+ *
+ * Return: The depth of the node. If tree is NULL, return 0.
+ */
+size_t binary_tree_depth(const binary_tree_t *tree)
+{
+	return ((tree && tree->parent) ? 1 + binary_tree_depth(tree->parent) : 0);
+}
+
+/**
+ * linked_node - Creates a linked list of nodes at the specified depth.
+ *
+ * @head: Pointer to the head of the linked list.
+ * @tree: Pointer to the node to store in the linked list.
+ * @level: Depth of the node.
+ */
+void linked_node(link_t **head, const binary_tree_t *tree, size_t level)
+{
+	link_t *new, *aux;
+
+	new = malloc(sizeof(link_t));
+	if (new == NULL)
+		return;
+
+	new->n = level;
+	new->node = tree;
+	new->next = NULL;
+
+	if (*head == NULL)
+		*head = new;
+	else
+	{
+		aux = *head;
+		while (aux->next != NULL)
+			aux = aux->next;
+		aux->next = new;
+	}
+}
+
+/**
+ * recursion - Recursively traverses the binary tree and stores each node in a linked list.
+ *
+ * @head: Pointer to the head of the linked list.
+ * @tree: Pointer to the current node.
+ */
+void recursion(link_t **head, const binary_tree_t *tree)
+{
+	size_t level = 0;
+
+	if (tree != NULL)
+	{
+		level = binary_tree_depth(tree);
+		linked_node(head, tree, level);
+		recursion(head, tree->left);
+		recursion(head, tree->right);
+	}
+}
+
+/**
  * binary_tree_levelorder - Performs level-order traversal of a binary tree.
  *
  * @tree: Pointer to the root node of the tree to traverse.
@@ -8,108 +92,31 @@
  */
 void binary_tree_levelorder(const binary_tree_t *tree, void (*func)(int))
 {
-	levelorder_queue_t *head, *tail;
+	link_t *head = NULL, *aux;
+	size_t height = 0, count = 0;
 
-	if (tree == NULL || func == NULL)
+	if (!tree || !func)
 		return;
 
-	head = tail = create_node((binary_tree_t *)tree);
-	if (head == NULL)
-		return;
+	height = binary_tree_height(tree);
+	recursion(&head, tree);
+
+	while (count <= height)
+	{
+		aux = head;
+		while (aux != NULL)
+		{
+			if (count == aux->n)
+				func(aux->node->n);
+			aux = aux->next;
+		}
+		count++;
+	}
 
 	while (head != NULL)
 	{
-		pint_push(head->node, head, &tail, func);
-		pop(&head);
+		aux = head;
+		head = head->next;
+		free(aux);
 	}
-}
-
-/**
- * create_node - Creates a new node for level-order traversal queue.
- *
- * @node: Binary tree node for the new node to contain.
- *
- * Return: Pointer to the new node.
- */
-levelorder_queue_t *create_node(binary_tree_t *node)
-{
-	levelorder_queue_t *new;
-
-	new = malloc(sizeof(levelorder_queue_t));
-	if (new == NULL)
-		return (NULL);
-
-	new->node = node;
-	new->next = NULL;
-
-	return (new);
-}
-
-/**
- * pint_push - Pushes children of a node into level-order traversal queue.
- *
- * @node: Binary tree node to push children from.
- * @head: Pointer to the head of the queue.
- * @tail: Double pointer to the tail of the queue.
- * @func: Pointer to the function to call on each node.
- */
-void pint_push(binary_tree_t *node, levelorder_queue_t *head,
-		levelorder_queue_t **tail, void (*func)(int))
-{
-	levelorder_queue_t *new;
-
-	func(node->n);
-	if (node->left != NULL)
-	{
-		new = create_node(node->left);
-		if (new == NULL)
-		{
-			free_queue(head);
-			exit(1);
-		}
-		(*tail)->next = new;
-		*tail = new;
-	}
-	if (node->right != NULL)
-	{
-		new = create_node(node->right);
-		if (new == NULL)
-		{
-			free_queue(head);
-			exit(1);
-		}
-		(*tail)->next = new;
-		*tail = new;
-	}
-}
-
-/**
- * free_queue - Frees memory allocated for level-order traversal queue.
- *
- * @head: Pointer to the head of the queue.
- */
-void free_queue(levelorder_queue_t *head)
-{
-	levelorder_queue_t *tmp;
-
-	while (head != NULL)
-	{
-		tmp = head->next;
-		free(head);
-		head = tmp;
-	}
-}
-
-/**
- * pop - Pops the head of the level-order traversal queue.
- *
- * @head: Double pointer to the head of the queue.
- */
-void pop(levelorder_queue_t **head)
-{
-	levelorder_queue_t *tmp;
-
-	tmp = (*head)->next;
-	free(*head);
-	*head = tmp;
 }
