@@ -3,39 +3,21 @@
 /**
  * binary_tree_height - Measures the height of a binary tree.
  *
- * @tree: Pointer to the root node of the tree.
+ * @tree: A pointer to the root node of the tree.
  *
- * Return: The height of the tree.
+ * Return: The height of the tree, 0 if the tree is NULL.
  */
 size_t binary_tree_height(const binary_tree_t *tree)
 {
-    if (tree == NULL)
-        return (0);
-
-    return (maxDepth(tree) - 1);
-}
-
-/**
- * maxDepth - Calculates the maximum depth of a binary tree.
- *
- * @node: Pointer to the current node.
- *
- * Return: The maximum depth of the subtree rooted at the given node.
- */
-int maxDepth(const binary_tree_t *node)
-{
-    if (node == NULL)
-        return (0);
-    else
+    if (tree)
     {
-        /* Compute the depth of each subtree */
-        int lDepth = maxDepth(node->left);
-        int rDepth = maxDepth(node->right);
+        size_t left_height = 0, right_height = 0;
 
-        /* Use the larger one */
-        if (lDepth > rDepth)
-            return (lDepth + 1);
-        else
-            return (rDepth + 1);
+        left_height = tree->left ? 1 + binary_tree_height(tree->left) : 0;
+        right_height = tree->right ? 1 + binary_tree_height(tree->right) : 0;
+
+        return ((left_height > right_height) ? left_height : right_height);
     }
+
+    return (0);
 }
